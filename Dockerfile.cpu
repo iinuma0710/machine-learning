@@ -1,0 +1,6 @@
+FROM pytorch/pytorch:2.9.1-cuda13.0-cudnn9-devel
+
+WORKDIR /work
+COPY ./requirements_cpu.txt /work/requirements.txt
+
+RUN pip install -U pip && pip install -r /work/requirements.txt

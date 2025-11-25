@@ -1,0 +1,23 @@
+services:
+  ml-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    tty: true
+    container_name: ml-gpu-container
+    volumes:
+      - ./notebooks:/work/notebooks
+      - ./python:/work/python
+      - ./src:/work/src
+      - ./data:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+        - 8888:8888
+    entrypoint: jupyter lab --ip 0.0.0.0 --port=8888 --no-browser --allow-root --ServerApp.token='' --ServerApp.password=''
+    profiles: ["gpu"]
