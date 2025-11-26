@@ -21,3 +21,19 @@ services:
         - 8888:8888
     entrypoint: jupyter lab --ip 0.0.0.0 --port=8888 --no-browser --allow-root --ServerApp.token='' --ServerApp.password=''
     profiles: ["gpu"]
+
+  ml-cpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    tty: true
+    container_name: ml-cpu-container
+    volumes:
+      - ./notebooks:/work/notebooks
+      - ./python:/work/python
+      - ./src:/work/src
+      - ./data:/data
+    ports:
+        - 8888:8888
+    entrypoint: jupyter lab --ip 0.0.0.0 --port=8888 --no-browser --allow-root --ServerApp.token='' --ServerApp.password=''
+    profiles: ["cpu"]

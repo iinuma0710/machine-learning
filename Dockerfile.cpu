@@ -1,6 +1,26 @@
-FROM pytorch/pytorch:2.9.1-cuda13.0-cudnn9-devel
+FROM ubuntu:22.04
 
 WORKDIR /work
 COPY ./requirements_cpu.txt /work/requirements.txt
 
+# C/C++ 環境のインストール
+RUN apt update && apt install -y build-essential clang cmake
+
+# バージョンを指定して Python をインストール
+RUN apt install -y --no-install-recommends wget build-essential libreadline-dev \ 
+    libssl-dev libncursesw5-dev libsqlite3-dev libgdbm-dev libbz2-dev liblzma-dev zlib1g-dev libdb-dev uuid-dev libffi-dev
+ARG PYTHON_VERSION=3.11.14
+RUN wget --no-check-certificate https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz \
+    && tar -xf Python-${PYTHON_VERSION}.tgz \
+    && cd Python-${PYTHON_VERSION} \
+    && ./configure --enable-optimizations\
+    && make -j4 \
+    && make install \
+    && ln -s /usr/local/bin/python3.11 /usr/local/bin/python \
+    && ln -s /usr/local/bin/pip3.11 /usr/local/bin/pip
+
+# Python で必要なパッケージをインストール
 RUN pip install -U pip && pip install -r /work/requirements.txt
+
+# 不要なパッケージは削除
+RUN apt autoremove -y

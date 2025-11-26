@@ -2,8 +2,14 @@
 古典的なパターン認識や統計的機械学習、強化学習、深層学習など、様々な機械学習手法について勉強して、実装した内容を置いておくためのリポジトリです。
 
 ## 環境構築
-### GPU なしの場合
+GPU のある環境では ```--profile``` オプションに ```gpu``` を、CPU オンリーの環境では ```cpu``` を指定してビルドとコンテナ化を行います。
 
+```bash
+$ docker compose --profile <cpu/gpu> build
+$ docker compose --profile <cpu/gpu> up -d
+```
+
+Jupyter Lab が立ち上がるので、[http://localhost:8888](http://localhost:8888) にアクセスします。
 
 ### GPU ありの場合
 WSL2 上で NVIDIA のコンシューマ向け GPU を使って学習等を行うことを想定しています。
@@ -33,4 +39,10 @@ $ sudo apt install -y \
       libnvidia-container-tools=${NVIDIA_CONTAINER_TOOLKIT_VERSION} \
       libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
 ```
+
+Docker イメージは、[PyTorch 2.9.1 + CUDA 13.0 のイメージ](https://hub.docker.com/layers/pytorch/pytorch/2.9.1-cuda13.0-cudnn9-devel/images/sha256-d8d98ebdc7006e495d263d8734eb7bb2d19803419d9315159fe15c62d5bad1bd)をベースに作成しています。
+
+### GPU なしの場合
+GPU ありの環境でベースにしている PyTorch の公式イメージの環境に可能な限り近づけています。
+ただし、Conda や NVIDIA 関連のパッケージはインストールしていません。
 
