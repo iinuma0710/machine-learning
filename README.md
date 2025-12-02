@@ -46,3 +46,28 @@ Docker イメージは、[PyTorch 2.9.1 + CUDA 13.0 のイメージ](https://hub
 GPU ありの環境でベースにしている PyTorch の公式イメージの環境に可能な限り近づけています。
 ただし、Conda や NVIDIA 関連のパッケージはインストールしていません。
 
+## 参考書
+###  ケヴィン P. マーフィー 著, 持橋大地・鈴木大慈 監訳 『[確率的機械学習：入門編 I](https://www.asakura.co.jp/detail.php?book_code=12303)・[II](https://www.asakura.co.jp/detail.php?book_code=12304)』(朝倉書店, 2025)
+- つい最近出された (2025年11月発売)、機械学習の理論をまとめた2分冊の訳書です。 
+- 古典的な機械学習のトピックに加え深層学習についても取り扱っており、内容的に下の２冊からアップデートされています。
+- 原著: Kevin P. Murphy “[Probabilistic Machine Learning: An Introduction](https://probml.github.io/pml-book/book1.html)“ (MIT Press, 2022)
+
+### Christopher M. Bishop "[Patern Recognition and Machine Learning](https://www.microsoft.com/en-us/research/wp-content/uploads/2006/01/Bishop-Pattern-Recognition-and-Machine-Learning-2006.pdf)" (Springer, 2006)
+- リンク先は無料で入手可能な英語版です。
+- PRML 本とも呼ばれる機械学習界隈で知らぬ人のいない大著で、実装メインのハウツー本というよりは、理論をしっかり理解するための本です。
+- 日本語版：元田浩・栗田多喜夫・樋口知之・松本裕治・村田昇 監訳『[パターン認識と機械学習 上](https://www.maruzen-publishing.co.jp/book/b10111651.html)/[下](https://www.maruzen-publishing.co.jp/book/b10111678.html)』(丸善出版, 2012)
+
+### Trevor Hastie, Robert Tibshirani, and Jerome Friedman "[The Elements of Statistical Learning](https://www.sas.upenn.edu/~fdiebold/NoHesitations/BookAdvanced.pdf)" (Springer, 2009)
+- PRML 本と同様、リンク先は無料で入手可能な英語版です。
+- 別名「カステラ本」で、PRML 本と並ぶ機械学習の名著です。こちらもかなり理論寄りの内容になります。
+- 日本語版： 杉山将・井手剛・神嶌敏弘・栗田多喜夫・前田英作 監訳『[統計的学習の基礎](https://www.kyoritsu-pub.co.jp/book/b10004471.html)』(共立出版, 2014)
+
+### Richard S. Sutton・Andrew G. Barto 著, 奥村エルネスト純・鈴木雅大・松尾豊・三上貞芳・山川宏 監訳 『[強化学習 第2版](https://www.morikita.co.jp/books/mid/082662)』 (森北出版, 2022)
+- 強化学習の理論全般に加え、心理学や神経科学との関連や AlphaGo についてもまとめられた書籍の訳本です。
+- 数式による理論の説明と、疑似コードによるアルゴリズムの解説が中心で、実装にはほぼ触れられていません。
+- 原著: Richard S. Sutton and Andrew G. Barto "[Reinforcement Learning: An Introduction Second Edition](https://mitpress.mit.edu/9780262039246/reinforcement-learning/)" (Bradford Books, 2018)
+
+### Ian Goodfellow・Yoshua Bengio・Aaron Courville 著, 岩澤有祐・鈴木雅大・中山浩太郎・松尾豊 監訳 『[深層学習](https://asciidwango.jp/post/171302668055/深層学習)』　(アスキードワンゴ, 2018)
+- 深層学習の生みの親が執筆に携わった、言わずと知れた名著です。
+- CNN や RNN の理論がまとめられていますが、Transformer などの登場前の本なので、近年の動向まではカバーしきれていません。
+- 原著: Ian Goodfellow, Yoshua Bengio, and Aaron Courville "[Deep Learning](https://www.deeplearningbook.org)" (MIT Press, 2016)
