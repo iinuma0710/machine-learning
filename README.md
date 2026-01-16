@@ -17,28 +17,13 @@ WSL を使う場合には、ポートフォワーディングで WSL に直接�
 次に、WSL に SSH 用のポートと Jupyter Lab 用のポートをポートフォワーディングする設定を自動で行うスクリプトを作成します。
 以下のようなスクリプトを ```C:¥Scripts¥``` フォルダに保存します。
 
-```wsl-launch-portproxy.ps1```
+```wsl-portproxy.ps1```
 ```ps1
 #requires -RunAsAdministrator
 $ErrorActionPreference = "Stop"
 
 # 起動直後のネットワーク待ち
 Start-Sleep -Seconds 15
-
-# WSLを起動
-& wsl.exe -d Ubuntu -e sh -lc "true" | Out-Null
-
-# WSLのネットワークIF立ち上がり待ち
-Start-Sleep -Seconds 15
-
-# portproxy更新スクリプトを実行
-& powershell.exe -ExecutionPolicy Bypass -File "C:\Scripts\wsl-portproxy.ps1"
-```
-
-```wsl-portproxy.ps1```
-```ps1
-#requires -RunAsAdministrator
-$ErrorActionPreference = "Stop"
 
 # ===== 設定 =====
 $WslDistro = "Ubuntu"   # 例: Ubuntu-24.04（空なら既定）
@@ -84,12 +69,11 @@ Write-Host "OK: $ListenAddress`:8888 -> $wslIp`:8888"
 & netsh interface portproxy show all
 ```
 
-```wsl-portproxy.ps1``` を ```wsl-launch-portproxy.ps1``` から呼び出す形になっています。
-内容としては、システムの起動から適当な時間待って WSL の起動を確認し、さらに少し待ってから WSL に割り当てられた IP アドレスを調べて、ポートフォワーディングとファイアウォールの設定を行います。
-この、```wsl-launch-portproxy.ps1``` をシステム起動時に実行するように設定しておきました。
+中身としては、システムの起動から適当な時間待ってから WSL に割り当てられた IP アドレスを調べて、ポートフォワーディングとファイアウォールの設定を行います。
+この ```wsl-portproxy.ps1``` をシステム起動時に実行するように設定しておきました。
 
 ```powershell
-$Action  = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Scripts\wsl-portproxy-launch.ps1"
+$Action  = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Scripts\wsl-portproxy.ps1"
 $Trigger = New-ScheduledTaskTrigger -AtStartup
 $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 
