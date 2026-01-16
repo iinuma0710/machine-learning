@@ -11,6 +11,97 @@ $ docker compose --profile <cpu/gpu> up -d
 
 Jupyter Lab が立ち上がるので、[http://localhost:8888](http://localhost:8888) にアクセスします。
 
+### WSL で環境構築を行う場合
+WSL を使う場合には、ポートフォワーディングで WSL に直接アクセスできるようにしておきます。
+まず、[Qiita の記事](https://qiita.com/ksk_ha/items/5d85925c72c3ba43c717)を参考に、Windows 起動時に自動的に WSL が起動するように設定しておきます。 
+次に、WSL に SSH 用のポートと Jupyter Lab 用のポートをポートフォワーディングする設定を自動で行うスクリプトを作成します。
+以下のようなスクリプトを ```C:¥Scripts¥``` フォルダに保存します。
+
+```wsl-launch-portproxy.ps1```
+```ps1
+#requires -RunAsAdministrator
+$ErrorActionPreference = "Stop"
+
+# 起動直後のネットワーク待ち
+Start-Sleep -Seconds 15
+
+# WSLを起動
+& wsl.exe -d Ubuntu -e sh -lc "true" | Out-Null
+
+# WSLのネットワークIF立ち上がり待ち
+Start-Sleep -Seconds 15
+
+# portproxy更新スクリプトを実行
+& powershell.exe -ExecutionPolicy Bypass -File "C:\Scripts\wsl-portproxy.ps1"
+```
+
+```wsl-portproxy.ps1```
+```ps1
+#requires -RunAsAdministrator
+$ErrorActionPreference = "Stop"
+
+# ===== 設定 =====
+$WslDistro = "Ubuntu"   # 例: Ubuntu-24.04（空なら既定）
+$ListenAddress = "0.0.0.0"
+
+# ===== WSLのIPv4を取得（awk/cut等を使わない）=====
+function Get-WslIPv4([string]$Distro) {
+  if ([string]::IsNullOrWhiteSpace($Distro)) {
+    $ip = (& wsl.exe -e sh -lc "hostname -I | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n1") 2>$null
+  } else {
+    $ip = (& wsl.exe -d $Distro -e sh -lc "hostname -I | tr ' ' '\n' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -n1") 2>$null
+  }
+
+  $ip = ($ip | Select-Object -First 1).ToString().Trim()
+  if ($ip -notmatch '^\d{1,3}(\.\d{1,3}){3}$') {
+    throw "WSL IPv4 取得失敗: '$ip'"
+  }
+  return $ip
+}
+
+$wslIp = Get-WslIPv4 $WslDistro
+Write-Host "WSL IPv4 = $wslIp"
+
+# ===== portproxy を更新 =====
+# SSH
+& netsh interface portproxy delete v4tov4 listenaddress=$ListenAddress listenport=22 | Out-Null
+& netsh interface portproxy add v4tov4 listenaddress=$ListenAddress listenport=22 connectaddress=$wslIp connectport=22 | Out-Null
+
+# Jupyter Lab
+& netsh interface portproxy delete v4tov4 listenaddress=$ListenAddress listenport=8888 | Out-Null
+& netsh interface portproxy add v4tov4 listenaddress=$ListenAddress listenport=8888 connectaddress=$wslIp connectport=8888 | Out-Null
+
+# ===== Firewallを開ける =====
+if (-not (Get-NetFirewallRule -Name "WSL-22" -ErrorAction SilentlyContinue)) {
+  New-NetFirewallRule -Name "WSL-22" -DisplayName "WSL-22" -Direction Inbound -Protocol TCP -LocalPort 22 -Action Allow | Out-Null
+}
+if (-not (Get-NetFirewallRule -Name "WSL-8888" -ErrorAction SilentlyContinue)) {
+  New-NetFirewallRule -Name "WSL-8888" -DisplayName "WSL-8888" -Direction Inbound -Protocol TCP -LocalPort 8888 -Action Allow | Out-Null
+}
+
+Write-Host "OK: $ListenAddress`:22 -> $wslIp`:22"
+Write-Host "OK: $ListenAddress`:8888 -> $wslIp`:8888"
+& netsh interface portproxy show all
+```
+
+```wsl-portproxy.ps1``` を ```wsl-launch-portproxy.ps1``` から呼び出す形になっています。
+内容としては、システムの起動から適当な時間待って WSL の起動を確認し、さらに少し待ってから WSL に割り当てられた IP アドレスを調べて、ポートフォワーディングとファイアウォールの設定を行います。
+この、```wsl-launch-portproxy.ps1``` をシステム起動時に実行するように設定しておきました。
+
+```powershell
+$Action  = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Scripts\wsl-portproxy-launch.ps1"
+$Trigger = New-ScheduledTaskTrigger -AtStartup
+$Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+
+Register-ScheduledTask `
+  -TaskName "WSL PortProxy Update (Startup)" `
+  -Action $Action `
+  -Trigger $Trigger `
+  -Settings $Settings `
+  -RunLevel Highest `
+  -Force
+```
+
 ### GPU ありの場合
 WSL2 上で NVIDIA のコンシューマ向け GPU を使って学習等を行うことを想定しています。
 ベースとなる環境の構築は以下のサイトを参照してください。
@@ -40,7 +131,7 @@ $ sudo apt install -y \
       libnvidia-container1=${NVIDIA_CONTAINER_TOOLKIT_VERSION}
 ```
 
-Docker イメージは、[PyTorch 2.9.1 + CUDA 13.0 のイメージ](https://hub.docker.com/layers/pytorch/pytorch/2.9.1-cuda13.0-cudnn9-devel/images/sha256-d8d98ebdc7006e495d263d8734eb7bb2d19803419d9315159fe15c62d5bad1bd)をベースに作成しています。
+Docker イメージは、[PyTorch 2.9.1 + CUDA 13.0 のイメージ](https://hub.docker.com/layers/pytorch/pytorch/2.9.1-cuda13.0-cudnn9-devel/images/sha256-d8d98ebdc7006e495d263d8734eb7bb2d19803419d9315159fe15c62d5bad1bd)をベースに作成しています。 
 
 ### GPU なしの場合
 GPU ありの環境でベースにしている PyTorch の公式イメージの環境に可能な限り近づけています。
